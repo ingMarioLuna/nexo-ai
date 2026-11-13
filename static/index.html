@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXO AI - Panel Copiloto Empresarial</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-color: rgba(22, 27, 34, 0.85);
+            --primary: #3b82f6;
+            --primary-muted: rgba(59, 130, 246, 0.2);
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-color: #30363d;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            
+            background-image: url('/logo.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(25, 14, 107, 0.65);
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            z-index: 1;
+        }
+
+        /* --- Pantalla de Login / Registro --- */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            color: #f0f6fc;
+            margin-bottom: 10px;
+        }
+
+        .login-input {
+            width: 100%;
+            background-color: rgba(1, 4, 9, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 12px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-muted);
+        }
+
+        /* --- Estilos Generales del Panel --- */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            color: #f0f6fc;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #f0f6fc;
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: rgba(1, 4, 9, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-muted);
+        }
+
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #30363d; color: var(--text-main); }
+        .btn-secondary:hover { background-color: #444c56; }
+        .btn-success { background-color: #238636; color: white; }
+        .btn-success:hover { background-color: #2ea043; }
+        .btn-danger { background-color: #da3633; color: white; margin-left: auto; }
+        .btn-danger:hover { background-color: #b31d1c; }
+
+        .loading-text {
+            display: none;
+            color: #e3b341;
+            margin-left: 10px;
+            font-size: 0.9rem;
+        }
+
+        .model-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .model-selector-container select {
+            background-color: rgba(1, 4, 9, 0.6);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 600px; }
+        th, td { text-align: left; padding: 16px; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-weight: 500; }
+        td { color: var(--text-main); }
+
+        .original-message-cell { max-width: 280px; color: #f0f6fc; }
+        .analysis-cell { color: var(--text-muted); line-height: 1.4; }
+
+        .badge-prioridad {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+        }
+        .priority-baja { background-color: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+        .priority-media { background-color: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+        .priority-alta { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .priority-critica { background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+        .badge-depto {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .response-card {
+            display: none;
+            background-color: rgba(13, 17, 23, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de Inicio de Sesión / Registro -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <img src="/logo.png" alt="NEXO AI" class="header-logo" style="width: 48px; height: 48px;">
+            <h2 id="loginTitle">Acceso a NEXO AI</h2>
+            <p id="loginSubtitle" class="subtitle" style="font-size: 0.9rem; margin-bottom: 20px;">Ingrese sus credenciales corporativas</p>
+            
+            <form id="authForm" onsubmit="manejarAuth(event)">
+                <input type="text" id="loginUser" class="login-input" placeholder="Usuario" required>
+                <input type="text" id="loginPass" class="login-input" placeholder="Contraseña" autocomplete="off" required>
+                <button type="submit" id="authBtn" class="btn-primary" style="margin-top: 5px;">Iniciar Sesión</button>
+            </form>
+
+            <p id="loginError" style="color: #f87171; font-size: 0.85rem; margin-top: 15px; display: none;"></p>
+            
+            <div style="margin-top: 20px; font-size: 0.85rem;">
+                <span id="toggleText" style="color: var(--text-muted);">¿No tienes cuenta?</span> 
+                <a href="#" onclick="cambiarModoAuth(event)" id="toggleLink" style="color: var(--primary); text-decoration: none; font-weight: 600;">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Encabezado -->
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div></div>
+                <div style="text-align: center;">
+                    <img src="/logo.png" alt="NEXO AI" class="header-logo">
+                    <h1>NEXO AI</h1>
+                    <p class="subtitle">Copiloto Inteligente con IA Local y SQLite</p>
+                </div>
+                <div>
+                    <button class="btn-danger" onclick="cerrarSesion()" style="padding: 6px 12px; font-size: 0.8rem;">Cerrar Sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Formulario de Consulta -->
+        <div class="card">
+            <h2>Nueva Solicitud o Incidencia</h2>
+            <textarea id="userMessage" placeholder="Describe el problema técnico (ej: El servidor principal no responde...)" required></textarea>
+            <div class="button-group">
+                <button class="btn-primary" onclick="enviarSolicitud()" style="width: auto;">Analizar con IA</button>
+                <span id="loadingText" class="loading-text">Procesando con Ollama...</span>
+
+                <div class="model-selector-container">
+                    <label for="modelSelect" style="color: var(--text-muted); font-size: 0.85rem;">Modelo:</label>
+                    <select id="modelSelect">
+                        <option value="llama3.2">Cargando modelos...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="userResponseBox" class="response-card">
+                <h3 style="margin-top:0; color: #f0f6fc; font-size: 1.1rem;">Respuesta del Copiloto:</h3>
+                <p id="responseText" style="color: var(--text-main); line-height: 1.5; margin-bottom: 0;"></p>
+            </div>
+        </div>
+
+        <!-- Historial de Solicitudes (SOLO visible para el Admin) -->
+        <div class="card" id="adminHistoryCard" style="display: none;">
+            <h2>Historial de Solicitudes Registradas (Panel de Administración)</h2>
+            <div class="button-group" style="margin-bottom: 20px; margin-top: 0;">
+                <button class="btn-secondary" onclick="cargarHistorial()">Actualizar Historial</button>
+                <!-- BOTÓN ACTUALIZADO A EXCEL ESTILIZADO -->
+                <button class="btn-success" onclick="exportarExcel()">📥 Descargar Reporte Excel</button>
+            </div>
+            
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th>Mensaje Original</th>
+                            <th>Análisis de la IA</th>
+                            <th class="col-prioridad">Prioridad</th>
+                            <th class="col-depto">Depto.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historialTable">
+                        <!-- Datos dinámicos -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/api/v1/requests";
+        const AUTH_URL = "http://127.0.0.1:8000/api/v1/auth";
+
+        let esModoRegistro = false;
+        let realPassword = ""; 
+
+        const passInput = document.getElementById("loginPass");
+
+        passInput.addEventListener("input", function(e) {
+            const val = passInput.value;
+            if (val.length > realPassword.length) {
+                const nuevoCaracter = val.slice(-1);
+                realPassword += nuevoCaracter;
+            } else if (val.length < realPassword.length) {
+                realPassword = realPassword.slice(0, val.length);
+            }
+
+            if (realPassword.length > 0) {
+                let visual = "•".repeat(realPassword.length - 1) + realPassword.slice(-1);
+                passInput.value = visual;
+
+                setTimeout(() => {
+                    if (passInput.value.includes(realPassword.slice(-1))) {
+                        passInput.value = "•".repeat(realPassword.length);
+                    }
+                }, 800);
+            } else {
+                passInput.value = "";
+            }
+        });
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const token = localStorage.getItem("nexo_token");
+            if (token) {
+                document.getElementById("loginOverlay").style.display = "none";
+                cargarModelosOllama();
+                
+                const tokenData = parseJwt(token);
+                const username = tokenData ? tokenData.sub : "";
+
+                if (username === "admin") {
+                    document.getElementById("adminHistoryCard").style.display = "block";
+                    cargarHistorial();
+                } else {
+                    document.getElementById("adminHistoryCard").style.display = "none";
+                }
+            }
+        });
+
+        function cambiarModoAuth(event) {
+            event.preventDefault();
+            esModoRegistro = !esModoRegistro;
+            const title = document.getElementById("loginTitle");
+            const subtitle = document.getElementById("loginSubtitle");
+            const btn = document.getElementById("authBtn");
+            const toggleText = document.getElementById("toggleText");
+            const toggleLink = document.getElementById("toggleLink");
+            const errorText = document.getElementById("loginError");
+            
+            errorText.style.display = "none";
+            realPassword = "";
+            passInput.value = "";
+
+            if (esModoRegistro) {
+                title.textContent = "Crear Cuenta - NEXO AI";
+                subtitle.textContent = "Registra un nuevo usuario operador";
+                btn.textContent = "Registrarse";
+                toggleText.textContent = "¿Ya tienes cuenta?";
+                toggleLink.textContent = "Inicia sesión";
+            } else {
+                title.textContent = "Acceso a NEXO AI";
+                subtitle.textContent = "Ingrese sus credenciales corporativas";
+                btn.textContent = "Iniciar Sesión";
+                toggleText.textContent = "¿No tienes cuenta?";
+                toggleLink.textContent = "Regístrate aquí";
+            }
+        }
+
+        async function manejarAuth(event) {
+            event.preventDefault();
+            const username = document.getElementById("loginUser").value;
+            const password = realPassword; 
+            const errorText = document.getElementById("loginError");
+
+            const endpoint = esModoRegistro ? `${AUTH_URL}/register` : `${AUTH_URL}/login`;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (esModoRegistro) {
+                        alert("¡Usuario registrado con éxito! Ahora puedes iniciar sesión.");
+                        cambiarModoAuth(new Event('click'));
+                        realPassword = "";
+                        passInput.value = "";
+                    } else {
+                        localStorage.setItem("nexo_token", data.access_token);
+                        document.getElementById("loginOverlay").style.display = "none";
+                        errorText.style.display = "none";
+                        cargarModelosOllama();
+
+                        const tokenData = parseJwt(data.access_token);
+                        const loggedUser = tokenData ? tokenData.sub : "";
+
+                        if (loggedUser === "admin") {
+                            document.getElementById("adminHistoryCard").style.display = "block";
+                            cargarHistorial();
+                        } else {
+                            document.getElementById("adminHistoryCard").style.display = "none";
+                        }
+                    }
+                } else {
+                    errorText.textContent = data.detail || "Ocurrió un error en la autenticación";
+                    errorText.style.display = "block";
+                }
+            } catch (err) {
+                console.error(err);
+                errorText.textContent = "Error de conexión con el servidor";
+                errorText.style.display = "block";
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem("nexo_token");
+            document.getElementById("loginOverlay").style.display = "flex";
+            document.getElementById("adminHistoryCard").style.display = "none";
+            document.getElementById("userResponseBox").style.display = "none";
+            realPassword = "";
+            passInput.value = "";
+            document.getElementById("loginUser").value = "";
+        }
+
+        async function cargarModelosOllama() {
+            try {
+                const response = await fetch(`${API_URL}/models`);
+                const data = await response.json();
+                const select = document.getElementById("modelSelect");
+                select.innerHTML = "";
+
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(modelName => {
+                        const option = document.createElement("option");
+                        option.value = modelName;
+                        option.textContent = modelName;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = `<option value="llama3.2">llama3.2 (Default)</option>`;
+                }
+            } catch (err) {
+                console.error("No se pudieron cargar los modelos", err);
+            }
+        }
+
+        async function enviarSolicitud() {
+            const messageInput = document.getElementById("userMessage");
+            const modelSelect = document.getElementById("modelSelect");
+            const message = messageInput.value;
+            const model = modelSelect ? modelSelect.value : "llama3.2";
+
+            if (!message) return alert("Por favor escribe una incidencia.");
+
+            const loading = document.getElementById("loadingText");
+            loading.style.display = "inline";
+            
+            const responseBox = document.getElementById("userResponseBox");
+            responseBox.style.display = "none";
+
+            try {
+                const response = await fetch(`${API_URL}/classify-ai`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message, model })
+                });
+                const data = response.ok ? await response.json() : null;
+                
+                if (response.ok && data) {
+                    messageInput.value = "";
+                    
+                    const token = localStorage.getItem("nexo_token");
+                    const tokenData = parseJwt(token);
+                    const username = tokenData ? tokenData.sub : "";
+
+                    if (username !== "admin") {
+                        const categoria = data.categoria || data.category || 'General';
+                        const diagnostico = data.diagnostico_breve || data.diagnostic || data.diagnostico || 'Procesado correctamente';
+                        const prioridad = data.prioridad || data.priority || 'Media';
+                        const depto = data.departamento_responsable || data.department || 'Soporte';
+                        const solucion = data.solucion_sugerida || data.solution || data.solucion || 'Revisar detalles técnicos.';
+
+                        const respText = `<strong>Categoría:</strong> ${categoria}<br>` +
+                                         `<strong>Diagnóstico:</strong> ${diagnostico}<br>` +
+                                         `<strong>Prioridad:</strong> ${prioridad}<br>` +
+                                         `<strong>Departamento:</strong> ${depto}<br>` +
+                                         `<em>Solución Sugerida: ${solucion}</em>`;
+                        
+                        document.getElementById("responseText").innerHTML = respText;
+                        responseBox.style.display = "block";
+                    } else {
+                        cargarHistorial();
+                    }
+                } else {
+                    alert("Error al procesar la solicitud con la IA.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("No se pudo conectar con el servidor backend.");
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+
+        async function cargarHistorial() {
+            try {
+                const response = await fetch(`${API_URL}/history`);
+                const data = await response.json();
+                const tbody = document.getElementById("historialTable");
+                tbody.innerHTML = "";
+
+                const historial = data.historial.sort((a, b) => b.id - a.id);
+
+                historial.forEach(item => {
+                    let prioridadClass = "priority-baja";
+                    const p = (item.prioridad || "").toLowerCase();
+                    if (p.includes("media")) {
+                        prioridadClass = "priority-media";
+                    } else if (p.includes("alta")) {
+                        prioridadClass = "priority-alta";
+                    } else if (p.includes("crít") || p.includes("crit")) {
+                        prioridadClass = "priority-critica";
+                    }
+
+                    const row = `<tr>
+                        <td>${item.id}</td>
+                        <td class="original-message-cell">${item.original_message}</td>
+                        <td class="analysis-cell">
+                            <strong>${item.categoria || 'N/A'}</strong><br>
+                            ${item.diagnostico_breve || ''}<br>
+                            <em>Solución: ${item.solucion_sugerida || ''}</em>
+                        </td>
+                        <td><span class="badge-prioridad ${prioridadClass}">${item.prioridad || 'N/A'}</span></td>
+                        <td><span class="badge-depto">${item.departamento_responsable || 'N/A'}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error("Error al cargar historial:", err);
+            }
+        }
+
+        // FUNCIÓN ACTUALIZADA PARA DESCARGAR EL REPORTE EN EXCEL ESTILIZADO (.xlsx)
+        async function exportarExcel() {
+            const token = localStorage.getItem("nexo_token");
+            if (!token) {
+                alert("Debes iniciar sesión primero.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/export/excel`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "nexo_ai_reporte.xlsx";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || "Acceso denegado: Solo el administrador puede exportar reportes.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error al intentar exportar el reporte en Excel.");
+            }
+        }
+    </script>
+</body>
+</html>
